@@ -1,14 +1,25 @@
 # function to generate spectral estimate of data
 
-spec_est <- function(data, nw, k){
+spec_est <- function(data, nw, k, block_length){
   # generally, nw = 4, k = 7
+
+  N <-  block_length
   
-  N <- length(data)
+  blocks <- matrix(ncol = length(data)/N, nrow = N)
   
-  # get spectral estimate -------
-  # this is for zero-padding - you can change the 3 to whatever you want, but 2 or 3 is usually fine
+  for(j in 1:ncol(blocks)){
+    blocks[,j]<- data[(1+(j-1)*N):(j*N)]
+  }
+  
+  # get spectral estimate for each column -------
+
   nFFT <- 2^(floor(log2(N)) + 3) 
+  spec <- matrix(nrow = nFFT, ncol = k * ncol(blocks))
   
+  for(i in 1:(ncol(blocks))){
+  
+  # this is for zero-padding - you can change the 3 to whatever you want, but 2 or 3 is usually fine
+  data <- blocks[,i]
   # generate the slepians (the $v will just return the matrix)
   slep <- dpss(n=N, k=k, nw=nw, returnEigenvalues=FALSE)$v
   
@@ -21,7 +32,11 @@ spec_est <- function(data, nw, k){
   # This will be a matrix with k columns and nFFT rows - each column is one eigencoefficient
   y_k <- mvfft(y_k.tmp)
   
-  return(y_k)
+  spec[,((i-1)*k+1):(i*k)] <- y_k
+  
+  }
+  
+  return(spec)
   
   
 }
