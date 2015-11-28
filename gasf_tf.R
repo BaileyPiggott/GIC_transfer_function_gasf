@@ -38,13 +38,21 @@ for(i in 1:length(freq)){
   tf[i] <- ginv(F_gas[,i]) %*% F_co2[,i]
 }
 
-p=1/2*length(tf)
-tf_re<- data.frame(freq = seq(0,0.5,0.5/(p-1)),tf = Re(tf[1:p]))
-tf_phase <- data.frame(freq = seq(0,0.5,0.5/(p-1)), tf = )
 
+# create data frames of tf magnitude and phase ----------------
+p=1/2*length(tf)
+mag <- abs(tf)
+phase <- atan2(Im(tf), Re(tf))
+
+tf <- data.frame(freq = seq(0,0.5,0.5/p), mag = mag[1:(p+1)], phase = phase[1:(p+1)])
+tf <- tf %>% gather(type, val, mag:phase)
 
 # plot transfer functions --------------
 
-ggplot(data = tf_re, aes(x = freq, y = tf)) +
-  geom_line()
+ggplot(data = tf, aes(x = freq, y = val)) +
+  facet_grid(type~., scale = "free_y") +
+  geom_line() +
+  stat_smooth(method = "loess", formula = y ~ x, size = 1, se = "FALSE", colour = "red")
+
+
 
